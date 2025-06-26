@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="pl" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/header :: head}">
+  <title>Dodaj ogłoszenie</title>
+</head>
+<body>
+<nav th:replace="~{fragments/header :: navbar}"></nav>
+
+<div class="container mt-4">
+  <div class="row justify-content-center">
+    <div class="col-md-8">
+      <div class="card shadow">
+        <div class="card-header bg-primary text-white">
+          <h3 class="mb-0">
+            <i class="fas fa-plus me-2"></i>Dodaj nowe ogłoszenie
+          </h3>
+        </div>
+        <div class="card-body">
+          <form th:action="@{/add-listing}" th:object="${listing}" method="post" enctype="multipart/form-data">
+            <!-- Tytuł -->
+            <div class="mb-3">
+              <label for="title" class="form-label">
+                <i class="fas fa-heading me-1"></i>Tytuł ogłoszenia *
+              </label>
+              <input type="text" class="form-control" th:field="*{title}"
+                     th:class="${#fields.hasErrors('title')} ? 'form-control is-invalid' : 'form-control'"
+                     placeholder="np. Mieszkanie 3-pokojowe w centrum">
+              <div th:if="${#fields.hasErrors('title')}" th:errors="*{title}" class="invalid-feedback"></div>
+            </div>
+
+            <!-- Opis -->
+            <div class="mb-3">
+              <label for="description" class="form-label">
+                <i class="fas fa-align-left me-1"></i>Opis *
+              </label>
+              <textarea class="form-control" th:field="*{description}" rows="5"
+                        th:class="${#fields.hasErrors('description')} ? 'form-control is-invalid' : 'form-control'"
+                        placeholder="Szczegółowy opis nieruchomości..."></textarea>
+              <div th:if="${#fields.hasErrors('description')}" th:errors="*{description}" class="invalid-feedback"></div>
+              <div class="form-text">Opisz nieruchomość jak najdokładniej (min. 10 znaków)</div>
+            </div>
+
+            <!-- Cena i lokalizacja -->
+            <div class="row">
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label for="price" class="form-label">
+                    <i class="fas fa-money-bill me-1"></i>Cena (PLN) *
+                  </label>
+                  <input type="number" class="form-control" th:field="*{price}" step="0.01" min="0"
+                         th:class="${#fields.hasErrors('price')} ? 'form-control is-invalid' : 'form-control'"
+                         placeholder="500000">
+                  <div th:if="${#fields.hasErrors('price')}" th:errors="*{price}" class="invalid-feedback"></div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label for="location" class="form-label">
+                    <i class="fas fa-map-marker-alt me-1"></i>Lokalizacja *
+                  </label>
+                  <input type="text" class="form-control" th:field="*{location}"
+                         th:class="${#fields.hasErrors('location')} ? 'form-control is-invalid' : 'form-control'"
+                         placeholder="Warszawa, Śródmieście">
+                  <div th:if="${#fields.hasErrors('location')}" th:errors="*{location}" class="invalid-feedback"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Szczegóły techniczne -->
+            <div class="row">
+              <div class="col-md-4">
+                <div class="mb-3">
+                  <label for="area" class="form-label">
+                    <i class="fas fa-ruler-combined me-1"></i>Powierzchnia (m²)
+                  </label>
+                  <input type="number" class="form-control" th:field="*{area}" step="0.1" min="0" placeholder="75.5">
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="mb-3">
+                  <label for="rooms" class="form-label">
+                    <i class="fas fa-bed me-1"></i>Liczba pokoi
+                  </label>
+                  <input type="number" class="form-control" th:field="*{rooms}" min="0" placeholder="3">
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="mb-3">
+                  <label for="bathrooms" class="form-label">
+                    <i class="fas fa-bath me-1"></i>Liczba łazienek
+                  </label>
+                  <input type="number" class="form-control" th:field="*{bathrooms}" min="0" placeholder="1">
+                </div>
+              </div>
+            </div>
+
+            <!-- Typy -->
+            <div class="row">
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label for="listingType" class="form-label">
+                    <i class="fas fa-tag me-1"></i>Typ ogłoszenia *
+                  </label>
+                  <select class="form-select" th:field="*{listingType}"
+                          th:class="${#fields.hasErrors('listingType')} ? 'form-select is-invalid' : 'form-select'">
+                    <option value="">Wybierz typ</option>
+                    <option value="SALE">Sprzedaż</option>
+                    <option value="RENT">Wynajem</option>
+                  </select>
+                  <div th:if="${#fields.hasErrors('listingType')}" th:errors="*{listingType}" class="invalid-feedback"></div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label for="propertyType" class="form-label">
+                    <i class="fas fa-home me-1"></i>Typ nieruchomości
+                  </label>
+                  <select class="form-select" th:field="*{propertyType}">
+                    <option value="">Wybierz typ</option>
+                    <option value="APARTMENT">Mieszkanie</option>
+                    <option value="HOUSE">Dom</option>
+                    <option value="CONDO">Apartament</option>
+                    <option value="TOWNHOUSE">Dom szeregowy</option>
+                    <option value="LAND">Działka</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <!-- Upload zdjęcia -->
+            <div class="mb-4">
+              <label for="image" class="form-label">
+                <i class="fas fa-camera me-1"></i>Zdjęcie nieruchomości
+              </label>
+              <input type="file" class="form-control" id="image" name="image" accept="image/*">
+              <div class="form-text">
+                <i class="fas fa-info-circle me-1"></i>
+                Dozwolone formaty: JPG, PNG, GIF. Maksymalny rozmiar: 5MB
+              </div>
+            </div>
+
+            <!-- Przyciski -->
+            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+              <a href="/listings" class="btn btn-secondary me-md-2">
+                <i class="fas fa-times me-1"></i>Anuluj
+              </a>
+              <button type="submit" class="btn btn-primary">
+                <i class="fas fa-plus me-1"></i>Dodaj ogłoszenie
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Podgląd obrazu -->
+      <div id="image-preview" class="mt-3 d-none">
+        <div class="card">
+          <div class="card-header">
+            <h6 class="mb-0">Podgląd zdjęcia</h6>
+          </div>
+          <div class="card-body text-center">
+            <img id="preview-img" src="" alt="Podgląd" class="img-fluid" style="max-height: 300px;">
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  // Podgląd obrazu przed uploadsem
+  document.getElementById('image').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        document.getElementById('preview-img').src = e.target.result;
+        document.getElementById('image-preview').classList.remove('d-none');
+      };
+      reader.readAsDataURL(file);
+    } else {
+      document.getElementById('image-preview').classList.add('d-none');
+    }
+  });
+</script>
+</body>
+</html>

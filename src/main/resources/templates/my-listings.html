@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="pl" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/header :: head}">
+  <title>Moje ogłoszenia</title>
+</head>
+<body>
+<nav th:replace="~{fragments/header :: navbar}"></nav>
+
+<div class="container mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="fas fa-user-circle me-2"></i>Moje ogłoszenia</h2>
+    <div class="d-flex gap-2 align-items-center">
+                <span class="badge bg-secondary fs-6" id="results-count"
+                      th:text="'Wyświetlane: ' + ${#lists.size(listings)} + ' z ' + ${totalListings} + ' ogłoszeń'"></span>
+      <a href="/add-listing" class="btn btn-success">
+        <i class="fas fa-plus me-1"></i>Dodaj nowe ogłoszenie
+      </a>
+    </div>
+  </div>
+
+  <!-- Filtry -->
+  <div class="card mb-4 shadow-sm">
+    <div class="card-body">
+      <h5 class="card-title">
+        <i class="fas fa-filter me-2"></i>Filtruj moje ogłoszenia
+      </h5>
+
+      <!-- Przyciski filtrowania -->
+      <div class="btn-group mb-3 w-100" role="group" aria-label="Filtry ogłoszeń">
+        <input type="radio" class="btn-check" name="filterType" id="filter-all" value="ALL"
+               th:checked="${filterType == null || filterType == 'ALL'}" autocomplete="off">
+        <label class="btn btn-outline-primary" for="filter-all">
+          <i class="fas fa-list me-1"></i>Wszystkie
+          <span class="badge bg-primary ms-1" th:text="${totalListings}">0</span>
+        </label>
+
+        <input type="radio" class="btn-check" name="filterType" id="filter-sale" value="SALE"
+               th:checked="${filterType == 'SALE'}" autocomplete="off">
+        <label class="btn btn-outline-success" for="filter-sale">
+          <i class="fas fa-hand-holding-usd me-1"></i>Sprzedaż
+          <span class="badge bg-success ms-1" th:text="${saleCount}">0</span>
+        </label>
+
+        <input type="radio" class="btn-check" name="filterType" id="filter-rent" value="RENT"
+               th:checked="${filterType == 'RENT'}" autocomplete="off">
+        <label class="btn btn-outline-info" for="filter-rent">
+          <i class="fas fa-key me-1"></i>Wynajem
+          <span class="badge bg-info ms-1" th:text="${rentCount}">0</span>
+        </label>
+      </div>
+
+      <!-- Dodatkowe filtry -->
+      <div class="row g-3">
+        <div class="col-md-4">
+          <label for="sortBy" class="form-label">
+            <i class="fas fa-sort me-1"></i>Sortuj według
+          </label>
+          <select class="form-select" id="sortBy" name="sortBy">
+            <option value="newest" th:selected="${sortBy == 'newest' || sortBy == null}">
+              Najnowsze
+            </option>
+            <option value="oldest" th:selected="${sortBy == 'oldest'}">
+              Najstarsze
+            </option>
+            <option value="price-asc" th:selected="${sortBy == 'price-asc'}">
+              Cena rosnąco
+            </option>
+            <option value="price-desc" th:selected="${sortBy == 'price-desc'}">
+              Cena malejąco
+            </option>
+          </select>
+        </div>
+        <div class="col-md-4">
+          <label for="propertyTypeFilter" class="form-label">
+            <i class="fas fa-home me-1"></i>Typ nieruchomości
+          </label>
+          <select class="form-select" id="propertyTypeFilter" name="propertyType">
+            <option value="">Wszystkie typy</option>
+            <option value="APARTMENT" th:selected="${propertyType == 'APARTMENT'}">Mieszkanie</option>
+            <option value="HOUSE" th:selected="${propertyType == 'HOUSE'}">Dom</option>
+            <option value="CONDO" th:selected="${propertyType == 'CONDO'}">Apartament</option>
+            <option value="TOWNHOUSE" th:selected="${propertyType == 'TOWNHOUSE'}">Dom szeregowy</option>
+            <option value="LAND" th:selected="${propertyType == 'LAND'}">Działka</option>
+          </select>
+        </div>
+        <div class="col-md-4 d-flex align-items-end">
+          <button type="button" class="btn btn-outline-secondary w-100" onclick="clearFilters()">
+            <i class="fas fa-times me-1"></i>Wyczyść filtry
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Brak ogłoszeń -->
+  <div th:if="${#lists.isEmpty(listings)}" class="text-center mt-5">
+    <div class="alert alert-info">
+      <i class="fas fa-info-circle me-2 fs-1"></i>
+      <div th:if="${filterType != null && filterType != 'ALL'}">
+        <h4>Brak ogłoszeń w wybranej kategorii</h4>
+        <p th:text="'Nie masz ogłoszeń w kategorii: ' + (${filterType == 'SALE'} ? 'Sprzedaż' : 'Wynajem')"></p>
+        <button class="btn btn-primary" onclick="showAllListings()">
+          <i class="fas fa-list me-1"></i>Pokaż wszystkie ogłoszenia
+        </button>
+      </div>
+      <div th:if="${filterType == null || filterType == 'ALL'}">
+        <h4>Brak ogłoszeń</h4>
+        <p>Nie masz jeszcze żadnych ogłoszeń.</p>
+        <a href="/add-listing" class="btn btn-primary btn-lg">
+          <i class="fas fa-plus me-1"></i>Dodaj pierwsze ogłoszenie
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Lista ogłoszeń -->
+  <div th:if="${not #lists.isEmpty(listings)}" class="row" id="listings-container">
+    <div th:each="listing : ${listings}" class="col-md-6 col-lg-4 mb-4 listing-item"
+         th:data-listing-type="${listing.listingType != null ? listing.listingType.name() : 'UNKNOWN'}"
+         th:data-property-type="${listing.propertyType != null ? listing.propertyType.name() : 'UNKNOWN'}"
+         th:data-price="${listing.price}"
+         th:data-created="${listing.createdAt}">
+      <div class="card h-100 listing-card">
+        <div class="position-relative">
+          <img th:if="${listing.imageUrl}"
+               th:src="${listing.imageUrl}"
+               class="card-img-top"
+               style="height: 200px; object-fit: cover;"
+               th:alt="${listing.title}">
+          <div th:if="${listing.imageUrl == null}"
+               class="card-img-top bg-light d-flex align-items-center justify-content-center"
+               style="height: 200px;">
+            <i class="fas fa-image text-muted fs-1"></i>
+          </div>
+
+          <!-- Badge z typem ogłoszenia -->
+          <div class="position-absolute top-0 end-0 m-2">
+                            <span class="badge listing-sale"
+                                  th:if="${listing.listingType != null && listing.listingType.name() == 'SALE'}"
+                                  th:text="${listing.listingTypeDisplayName}"></span>
+            <span class="badge listing-rent"
+                  th:if="${listing.listingType != null && listing.listingType.name() == 'RENT'}"
+                  th:text="${listing.listingTypeDisplayName}"></span>
+            <span class="badge bg-secondary"
+                  th:if="${listing.listingType == null}"
+                  th:text="'Nieokreślony'"></span>
+          </div>
+
+          <!-- Status właściciela -->
+          <div class="position-absolute top-0 start-0 m-2">
+                            <span class="badge bg-warning text-dark">
+                                <i class="fas fa-user me-1"></i>Twoje
+                            </span>
+          </div>
+        </div>
+
+        <div class="card-body d-flex flex-column">
+          <h5 class="card-title" th:text="${listing.title}"></h5>
+          <p class="card-text listing-location mb-2">
+            <i class="fas fa-map-marker-alt text-danger"></i>
+            <span th:text="${listing.location}"></span>
+          </p>
+          <p class="card-text flex-grow-1" th:text="${#strings.abbreviate(listing.description, 100)}"></p>
+
+          <div class="mt-auto">
+            <div class="row mb-3">
+              <div class="col">
+                <div class="listing-price"
+                     th:text="${#numbers.formatDecimal(listing.price, 0, 'COMMA', 0, 'POINT')} + ' PLN'"></div>
+              </div>
+            </div>
+
+            <div class="row listing-features text-muted small mb-3">
+              <div class="col-6" th:if="${listing.area}">
+                <i class="fas fa-ruler-combined text-primary"></i>
+                <span th:text="${listing.area} + ' m²'"></span>
+              </div>
+              <div class="col-6" th:if="${listing.rooms}">
+                <i class="fas fa-bed text-primary"></i>
+                <span th:text="${listing.rooms} + ' pok.'"></span>
+              </div>
+              <div class="col-6 mt-1" th:if="${listing.bathrooms}">
+                <i class="fas fa-bath text-primary"></i>
+                <span th:text="${listing.bathrooms} + ' łaz.'"></span>
+              </div>
+              <div class="col-6 mt-1" th:if="${listing.propertyType}">
+                <i class="fas fa-home text-primary"></i>
+                <span th:text="${listing.propertyTypeDisplayName}"></span>
+              </div>
+            </div>
+
+            <!-- Informacje o dacie -->
+            <div class="row text-muted small mb-3">
+              <div class="col-12">
+                <i class="fas fa-calendar me-1"></i>
+                Dodane: <span th:text="${#temporals.format(listing.createdAt, 'dd.MM.yyyy')}"></span>
+              </div>
+              <div class="col-12" th:if="${listing.updatedAt != null && !listing.createdAt.equals(listing.updatedAt)}">
+                <i class="fas fa-edit me-1"></i>
+                Edytowane: <span th:text="${#temporals.format(listing.updatedAt, 'dd.MM.yyyy')}"></span>
+              </div>
+            </div>
+
+            <!-- Przyciski akcji -->
+            <div class="btn-group w-100" role="group">
+              <a th:href="@{/listing/{id}(id=${listing.id})}" class="btn btn-outline-primary btn-sm">
+                <i class="fas fa-eye me-1"></i>Zobacz
+              </a>
+              <form th:action="@{/delete-listing/{id}(id=${listing.id})}" method="post"
+                    onsubmit="return confirm('Czy na pewno chcesz usunąć ogłoszenie: ' + this.dataset.title + '?')"
+                    th:data-title="${listing.title}"
+                    class="d-inline flex-fill">
+                <button type="submit" class="btn btn-outline-danger btn-sm w-100">
+                  <i class="fas fa-trash me-1"></i>Usuń
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Statystyki użytkownika -->
+  <div th:if="${totalListings > 0}" class="mt-5">
+    <div class="row">
+      <div class="col-md-3">
+        <div class="card bg-primary text-white">
+          <div class="card-body text-center">
+            <i class="fas fa-list fs-1 mb-2"></i>
+            <h4 th:text="${totalListings}">0</h4>
+            <p class="mb-0">Wszystkich ogłoszeń</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card bg-success text-white">
+          <div class="card-body text-center">
+            <i class="fas fa-hand-holding-usd fs-1 mb-2"></i>
+            <h4 th:text="${saleCount}">0</h4>
+            <p class="mb-0">Na sprzedaż</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card bg-info text-white">
+          <div class="card-body text-center">
+            <i class="fas fa-key fs-1 mb-2"></i>
+            <h4 th:text="${rentCount}">0</h4>
+            <p class="mb-0">Na wynajem</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card bg-warning text-dark">
+          <div class="card-body text-center">
+            <i class="fas fa-chart-line fs-1 mb-2"></i>
+            <h4 id="avg-price">-</h4>
+            <p class="mb-0">Średnia cena</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Informacja o filtrach -->
+  <div class="mt-4" id="filter-info" style="display: none;">
+    <div class="alert alert-info">
+      <i class="fas fa-info-circle me-2"></i>
+      <span id="filter-message"></span>
+      <button class="btn btn-sm btn-outline-primary ms-2" onclick="clearFilters()">
+        Pokaż wszystkie
+      </button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  // Zmienne globalne
+  let allListings = [];
+  let currentFilter = 'ALL';
+  let currentSort = 'newest';
+  let currentPropertyType = '';
+
+  // Inicjalizacja po załadowaniu strony
+  document.addEventListener('DOMContentLoaded', function() {
+    // Zbierz wszystkie ogłoszenia do tablicy
+    collectListings();
+
+    // Ustaw aktualny filtr z URL lub domyślny
+    const urlParams = new URLSearchParams(window.location.search);
+    currentFilter = urlParams.get('filterType') || 'ALL';
+    currentSort = urlParams.get('sortBy') || 'newest';
+    currentPropertyType = urlParams.get('propertyType') || '';
+
+    // Obsługa przycisków filtrowania
+    document.querySelectorAll('input[name="filterType"]').forEach(radio => {
+      radio.addEventListener('change', function() {
+        currentFilter = this.value;
+        updateFilters();
+      });
+    });
+
+    // Obsługa sortowania
+    document.getElementById('sortBy').addEventListener('change', function() {
+      currentSort = this.value;
+      updateFilters();
+    });
+
+    // Obsługa filtra typu nieruchomości
+    document.getElementById('propertyTypeFilter').addEventListener('change', function() {
+      currentPropertyType = this.value;
+      updateFilters();
+    });
+
+    // Pierwsze zastosowanie filtrów
+    updateFilters();
+    calculateAveragePrice();
+  });
+
+  // Zbieranie danych o ogłoszeniach
+  function collectListings() {
+    const listingElements = document.querySelectorAll('.listing-item');
+    allListings = Array.from(listingElements).map(element => ({
+      element: element,
+      listingType: element.dataset.listingType,
+      propertyType: element.dataset.propertyType,
+      price: parseFloat(element.dataset.price),
+      created: new Date(element.dataset.created)
+    }));
+  }
+
+  // Aktualizacja filtrów
+  function updateFilters() {
+    let filteredListings = [...allListings];
+
+    // Filtrowanie według typu ogłoszenia
+    if (currentFilter !== 'ALL') {
+      filteredListings = filteredListings.filter(listing =>
+              listing.listingType === currentFilter
+      );
+    }
+
+    // Filtrowanie według typu nieruchomości
+    if (currentPropertyType !== '') {
+      filteredListings = filteredListings.filter(listing =>
+              listing.propertyType === currentPropertyType
+      );
+    }
+
+    // Sortowanie
+    filteredListings.sort((a, b) => {
+      switch (currentSort) {
+        case 'oldest':
+          return a.created - b.created;
+        case 'price-asc':
+          return a.price - b.price;
+        case 'price-desc':
+          return b.price - a.price;
+        case 'newest':
+        default:
+          return b.created - a.created;
+      }
+    });
+
+    // Ukryj wszystkie ogłoszenia
+    allListings.forEach(listing => {
+      listing.element.style.display = 'none';
+    });
+
+    // Pokaż przefiltrowane ogłoszenia
+    const container = document.getElementById('listings-container');
+    filteredListings.forEach((listing, index) => {
+      listing.element.style.display = 'block';
+      container.appendChild(listing.element);
+    });
+
+    // Aktualizuj licznik
+    updateResultsCount(filteredListings.length);
+
+    // Pokaż informację o filtrach
+    updateFilterInfo(filteredListings.length);
+
+    // Aktualizuj URL
+    updateURL();
+  }
+
+  // Aktualizacja licznika wyników
+  function updateResultsCount(count) {
+    const totalCount = [[${totalListings}]];
+    document.getElementById('results-count').textContent =
+            `Wyświetlane: ${count} z ${totalCount} ogłoszeń`;
+  }
+
+  // Informacja o aktywnych filtrach
+  function updateFilterInfo(count) {
+    const filterInfo = document.getElementById('filter-info');
+    const filterMessage = document.getElementById('filter-message');
+
+    if (currentFilter !== 'ALL' || currentPropertyType !== '') {
+      let message = `Filtr aktywny: `;
+
+      if (currentFilter !== 'ALL') {
+        message += currentFilter === 'SALE' ? 'Sprzedaż' : 'Wynajem';
+      }
+
+      if (currentPropertyType !== '') {
+        if (currentFilter !== 'ALL') message += ', ';
+        const propertyTypes = {
+          'APARTMENT': 'Mieszkanie',
+          'HOUSE': 'Dom',
+          'CONDO': 'Apartament',
+          'TOWNHOUSE': 'Dom szeregowy',
+          'LAND': 'Działka'
+        };
+        message += propertyTypes[currentPropertyType] || currentPropertyType;
+      }
+
+      message += `. Znaleziono ${count} ogłoszeń.`;
+      filterMessage.textContent = message;
+      filterInfo.style.display = 'block';
+    } else {
+      filterInfo.style.display = 'none';
+    }
+  }
+
+  // Aktualizacja URL
+  function updateURL() {
+    const params = new URLSearchParams();
+
+    if (currentFilter !== 'ALL') {
+      params.set('filterType', currentFilter);
+    }
+    if (currentSort !== 'newest') {
+      params.set('sortBy', currentSort);
+    }
+    if (currentPropertyType !== '') {
+      params.set('propertyType', currentPropertyType);
+    }
+
+    const newURL = window.location.pathname + (params.toString() ? '?' + params.toString() : '');
+    window.history.replaceState({}, '', newURL);
+  }
+
+  // Wyczyść wszystkie filtry
+  function clearFilters() {
+    currentFilter = 'ALL';
+    currentSort = 'newest';
+    currentPropertyType = '';
+
+    document.getElementById('filter-all').checked = true;
+    document.getElementById('sortBy').value = 'newest';
+    document.getElementById('propertyTypeFilter').value = '';
+
+    updateFilters();
+  }
+
+  // Pokaż wszystkie ogłoszenia
+  function showAllListings() {
+    clearFilters();
+  }
+
+  // Oblicz średnią cenę
+  function calculateAveragePrice() {
+    if (allListings.length === 0) return;
+
+    const totalPrice = allListings.reduce((sum, listing) => sum + listing.price, 0);
+    const avgPrice = totalPrice / allListings.length;
+
+    document.getElementById('avg-price').textContent =
+            new Intl.NumberFormat('pl-PL', {
+              style: 'currency',
+              currency: 'PLN',
+              maximumFractionDigits: 0
+            }).format(avgPrice);
+  }
+
+  // Funkcje pomocnicze dla przycisków
+  function filterBySale() {
+    document.getElementById('filter-sale').checked = true;
+    currentFilter = 'SALE';
+    updateFilters();
+  }
+
+  function filterByRent() {
+    document.getElementById('filter-rent').checked = true;
+    currentFilter = 'RENT';
+    updateFilters();
+  }
+
+  function filterByAll() {
+    document.getElementById('filter-all').checked = true;
+    currentFilter = 'ALL';
+    updateFilters();
+  }
+</script>
+</body>
+</html>

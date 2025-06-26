@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="pl" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/header :: head}">
+  <title>Rejestracja</title>
+</head>
+<body class="bg-light">
+<nav th:replace="~{fragments/header :: navbar}"></nav>
+
+<div class="container mt-5">
+  <div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+      <div class="card shadow">
+        <div class="card-header bg-success text-white text-center">
+          <h3 class="mb-0">
+            <i class="fas fa-user-plus me-2"></i>Rejestracja
+          </h3>
+        </div>
+        <div class="card-body">
+          <!-- Komunikat sukcesu -->
+          <div th:if="${param.success}" class="alert alert-success">
+            <i class="fas fa-check-circle me-2"></i>
+            Rejestracja przebiegła pomyślnie! Możesz się teraz zalogować.
+          </div>
+
+          <form th:action="@{/registration}" th:object="${user}" method="post">
+            <!-- Imię i nazwisko -->
+            <div class="row">
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label for="firstName" class="form-label">
+                    <i class="fas fa-user me-1"></i>Imię *
+                  </label>
+                  <input type="text" class="form-control" th:field="*{firstName}"
+                         th:class="${#fields.hasErrors('firstName')} ? 'form-control is-invalid' : 'form-control'"
+                         placeholder="Wprowadź imię">
+                  <div th:if="${#fields.hasErrors('firstName')}" th:errors="*{firstName}" class="invalid-feedback"></div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label for="lastName" class="form-label">
+                    <i class="fas fa-user me-1"></i>Nazwisko *
+                  </label>
+                  <input type="text" class="form-control" th:field="*{lastName}"
+                         th:class="${#fields.hasErrors('lastName')} ? 'form-control is-invalid' : 'form-control'"
+                         placeholder="Wprowadź nazwisko">
+                  <div th:if="${#fields.hasErrors('lastName')}" th:errors="*{lastName}" class="invalid-feedback"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Email -->
+            <div class="mb-3">
+              <label for="email" class="form-label">
+                <i class="fas fa-envelope me-1"></i>Email *
+              </label>
+              <input type="email" class="form-control" th:field="*{email}"
+                     th:class="${#fields.hasErrors('email')} ? 'form-control is-invalid' : 'form-control'"
+                     placeholder="Wprowadź adres email">
+              <div th:if="${#fields.hasErrors('email')}" th:errors="*{email}" class="invalid-feedback"></div>
+              <div class="form-text">
+                <i class="fas fa-info-circle me-1"></i>
+                Email będzie służył jako nazwa użytkownika
+              </div>
+            </div>
+
+            <!-- Hasło -->
+            <div class="mb-3">
+              <label for="password" class="form-label">
+                <i class="fas fa-lock me-1"></i>Hasło *
+              </label>
+              <div class="input-group">
+                <input type="password" class="form-control" th:field="*{password}" id="password"
+                       th:class="${#fields.hasErrors('password')} ? 'form-control is-invalid' : 'form-control'"
+                       placeholder="Wprowadź hasło">
+                <button class="btn btn-outline-secondary" type="button" onclick="togglePassword()">
+                  <i class="fas fa-eye" id="toggleIcon"></i>
+                </button>
+              </div>
+              <div th:if="${#fields.hasErrors('password')}" th:errors="*{password}" class="invalid-feedback"></div>
+              <div class="form-text">
+                <i class="fas fa-shield-alt me-1"></i>
+                Hasło musi mieć minimum 8 znaków
+              </div>
+            </div>
+
+            <!-- Telefon -->
+            <div class="mb-3">
+              <label for="phone" class="form-label">
+                <i class="fas fa-phone me-1"></i>Telefon (opcjonalnie)
+              </label>
+              <input type="tel" class="form-control" th:field="*{phone}"
+                     placeholder="np. +48 123 456 789">
+              <div class="form-text">
+                <i class="fas fa-info-circle me-1"></i>
+                Numer telefonu będzie widoczny w Twoich ogłoszeniach
+              </div>
+            </div>
+
+            <!-- Checkbox zgody -->
+            <div class="mb-3 form-check">
+              <input type="checkbox" class="form-check-input" id="terms" required>
+              <label class="form-check-label" for="terms">
+                Akceptuję <a href="#" data-bs-toggle="modal" data-bs-target="#termsModal">regulamin</a>
+                i wyrażam zgodę na przetwarzanie danych osobowych *
+              </label>
+            </div>
+
+            <!-- Przycisk rejestracji -->
+            <div class="d-grid">
+              <button type="submit" class="btn btn-success">
+                <i class="fas fa-user-plus me-1"></i>Zarejestruj się
+              </button>
+            </div>
+          </form>
+
+          <hr>
+          <div class="text-center">
+            <p class="mb-2">Masz już konto?</p>
+            <a href="/login" class="btn btn-outline-primary">
+              <i class="fas fa-sign-in-alt me-1"></i>Zaloguj się
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal z regulaminem -->
+<div class="modal fade" id="termsModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Regulamin Portal Nieruchomości</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <h6>1. Postanowienia ogólne</h6>
+        <p>Portal Nieruchomości umożliwia publikowanie ogłoszeń dotyczących sprzedaży i wynajmu nieruchomości.</p>
+
+        <h6>2. Rejestracja</h6>
+        <p>Rejestracja jest bezpłatna i wymagana do publikowania ogłoszeń.</p>
+
+        <h6>3. Ochrona danych</h6>
+        <p>Dane osobowe są przetwarzane zgodnie z RODO i służą wyłącznie do funkcjonowania portalu.</p>
+
+        <h6>4. Odpowiedzialność</h6>
+        <p>Użytkownicy są odpowiedzialni za treść publikowanych ogłoszeń.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Rozumiem</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  function togglePassword() {
+    const passwordField = document.getElementById('password');
+    const toggleIcon = document.getElementById('toggleIcon');
+
+    if (passwordField.type === 'password') {
+      passwordField.type = 'text';
+      toggleIcon.classList.remove('fa-eye');
+      toggleIcon.classList.add('fa-eye-slash');
+    } else {
+      passwordField.type = 'password';
+      toggleIcon.classList.remove('fa-eye-slash');
+      toggleIcon.classList.add('fa-eye');
+    }
+  }
+</script>
+</body>
+</html>
